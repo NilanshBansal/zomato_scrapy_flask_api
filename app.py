@@ -3,7 +3,7 @@ from allReviews import AllreviewsSpider
 import json
 from scrapy.crawler import CrawlerRunner
 
-app = Flask(__name__)
+app = Flask('Scrape With Flask')
 crawl_runner = CrawlerRunner()      # requires the Twisted reactor to run
 
 reviews_list = []                    # store quotes
@@ -14,13 +14,12 @@ scrape_complete = False
 def crawl():
     global scrape_in_progress
     global scrape_complete
-    location = request.args.get("location")
+    query = request.args.get("query")
 
 
     if not scrape_in_progress:
         scrape_in_progress = True
-        global reviews_list
-        eventual = crawl_runner.crawl(AllreviewsSpider , location=location, reviews_list=reviews_list)
+        eventual = crawl_runner.crawl(AllreviewsSpider , query=query, reviews_list=reviews_list)
         eventual.addCallback(finished_scrape)
         return 'SCRAPING'
     elif scrape_complete:
@@ -55,11 +54,4 @@ if __name__=='__main__':
     http_server.listen(factory)
 
     reactor.run()
-
-
-
-
-
-
-# app.run(port=5000)
-
+    
