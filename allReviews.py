@@ -135,29 +135,3 @@ class AllreviewsSpider(scrapy.Spider):
 
             yield scrapy.FormRequest(url="https://www.zomato.com/php/social_load_more.php",
                                 callback=self.parse_reviews, formdata=data, headers=headers)
-        # print(self.more_reviews)
-
-        # writeHeader=True
-        # if((os.path.exists('zomato_data.csv'))):
-        #     writeHeader=False
-        
-        # with open('zomato_data.csv', 'a') as f:
-        #     writer = csv.DictWriter(f, self.more_reviews[0].keys())
-        #     if writeHeader:
-        #         writer.writeheader()
-        #     for more_review in self.more_reviews:
-        #             writer.writerow(more_review)
-
-
-
-#SCRAPY SHELL
-# data ={'entity_id': '310780',
-#  'limit': '5',
-#  'page': '0',
-#  'profile_action': 'reviews-dd'}
-
-# url="https://www.zomato.com/php/social_load_more.php"
-
-# r = FormRequest(url, formdata=data,headers = {'user-agent':"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0)"})
-
-# fetch(r)
