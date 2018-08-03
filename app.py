@@ -2,6 +2,7 @@ from flask import Flask,jsonify,request,render_template
 from allReviews import AllreviewsSpider
 import json
 from scrapy.crawler import CrawlerRunner
+import time
 
 app = Flask('Scrape With Flask')
 crawl_runner = CrawlerRunner()      # requires the Twisted reactor to run
@@ -16,15 +17,14 @@ def crawl():
     global scrape_complete
     query = request.args.get("query")
 
+    eventual = crawl_runner.crawl(AllreviewsSpider , query=query, reviews_list=reviews_list)
+    eventual.addCallback(finished_scrape)
+    
+    time.sleep(10)
+    if scrape_complete:
+        return json.dumps(reviews_list)
+    return 'ERORR OCCURRED'
 
-    if not scrape_in_progress:
-        scrape_in_progress = True
-        eventual = crawl_runner.crawl(AllreviewsSpider , query=query, reviews_list=reviews_list)
-        eventual.addCallback(finished_scrape)
-        return 'SCRAPING'
-    elif scrape_complete:
-        return 'SCRAPE COMPLETE'
-    return 'SCRAPE IN PROGRESS'
 
 
 @app.route('/results')
