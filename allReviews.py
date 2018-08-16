@@ -25,13 +25,14 @@ class AllreviewsSpider(scrapy.Spider):
         self.sno = 0
         self.page_no = 0
         self.query = query
+        self.url = ''
 
     def start_requests(self):
-
         headers = {'user-agent': random.SystemRandom().choice(self.userAgents)}
         # request = Request(url='https://8f2b7358.ngrok.io',
         #                   callback=self.parse_response, dont_filter=True,headers=headers)
         query = self.query
+        # %27bukhara%20itc%20maurya%27
         if query is None:
             query = 'Burger King,Cannaught Place'
         query = urllib.parse.quote_plus(query)
@@ -43,11 +44,35 @@ class AllreviewsSpider(scrapy.Spider):
 
     def parse_response(self, response):
         results = (json.loads(response.text))['results']
-        for result in results:
-            if result['entity_type'] == 'restaurant':
-                print(result['entity_id'])
-                self.entity_id = result['entity_id']
-                break
+    
+        self.entity_id = results[0]['entity_id']
+        self.url = 'https://www.zomato.com/php/social_load_more.php'
+        if results[0]['entity_type'] == 'restaurant':
+            return self.parse_restaurants()
+        elif results[0]['entity_type'] == 'city':
+            self.url = results[0]['url']
+            return self.parse_city()
+        else :
+            return self.more_reviews.append({'Msg':'NOT FOUND!'})    
+        
+
+    def parse_city(self):
+        headers = {'user-agent': random.SystemRandom().choice(self.userAgents)}
+        yield Request(
+            url=self.url,
+            callback=self.parse_city_response, headers=headers
+        )
+
+    def parse_city_response(self,response):
+        soup = BeautifulSoup(response.text,"lxml")
+        anchors = soup.find_all('a',{'class':'hover_feedback'})
+        anchor = anchors[0]['href']
+        rating_divs = soup.find_all('div',{'class':'rating-popup'})
+        self.entity_id = rating_divs[0]['data-res-id']
+        self.url = 'https://www.zomato.com/php/social_load_more.php'
+        return self.parse_restaurants()
+
+    def parse_restaurants(self):
         headers = {'user-agent': random.SystemRandom().choice(self.userAgents)}
         self.page_more = 1
         self.page_no = 0
@@ -57,8 +82,7 @@ class AllreviewsSpider(scrapy.Spider):
             "page": str(self.page_no),
             "limit": '5'
         }
-        
-        yield scrapy.FormRequest(url="https://www.zomato.com/php/social_load_more.php",
+        yield scrapy.FormRequest(url=self.url,
                                 callback=self.parse_reviews, formdata=data, headers=headers)
 
     def parse_reviews(self, response):

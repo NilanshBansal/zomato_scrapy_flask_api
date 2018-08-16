@@ -13,10 +13,11 @@ scrape_complete = False
 
 @app.route('/crawl')
 def crawl():
+    global reviews_list
     global scrape_in_progress
     global scrape_complete
     query = request.args.get("query")
-
+    reviews_list = []
     eventual = crawl_runner.crawl(AllreviewsSpider , query=query, reviews_list=reviews_list)
     eventual.addCallback(finished_scrape)
     
