@@ -29,10 +29,8 @@ class AllreviewsSpider(scrapy.Spider):
 
     def start_requests(self):
         headers = {'user-agent': random.SystemRandom().choice(self.userAgents)}
-        # request = Request(url='https://8f2b7358.ngrok.io',
-        #                   callback=self.parse_response, dont_filter=True,headers=headers)
+        
         query = self.query
-        # %27bukhara%20itc%20maurya%27
         if query is None:
             query = 'Burger King,Cannaught Place'
         query = urllib.parse.quote_plus(query)
@@ -49,12 +47,46 @@ class AllreviewsSpider(scrapy.Spider):
         self.url = 'https://www.zomato.com/php/social_load_more.php'
         if results[0]['entity_type'] == 'restaurant':
             return self.parse_restaurants()
-        elif results[0]['entity_type'] == 'city':
+        elif results[0]['entity_type'] == 'collection':
+            self.url = results[0]['url']
+            return self.parse_collection()
+        elif results[0]['entity_type'] == 'zone' or results[0]['entity_type'] == 'subzone':
+            self.url = results[0]['url']
+            return self.parse_zone()
+        elif results[0]['entity_type'] == 'city' or results[0]['entity_type'] == 'chain' or results[0]['entity_type'] == 'subzone_chain' or results[0]['entity_type'] == 'group' or results[0]['entity_type'] == 'delivery_subzone_alias' or results[0]['entity_type'] == 'zomato_place' or results[0]['entity_type'] == 'metro' or results[0]['entity_type'] == 'landmark' or results[0]['entity_type'] == 'cuisine':
             self.url = results[0]['url']
             return self.parse_city()
         else :
             return self.more_reviews.append({'Msg':'NOT FOUND!'})    
+    
+    def parse_collection(self):
         
+        headers = {'user-agent': random.SystemRandom().choice(self.userAgents)}
+        yield Request(
+            url=self.url,
+            callback=self.parse_collection_response, headers=headers
+        )
+    
+    def parse_collection_response(self,response):
+        soup = BeautifulSoup(response.text,"lxml")
+        all_divs = soup.find_all('div',{'class':'entity-ads-snippet-track'})
+        self.entity_id = all_divs[0]['data-entity-id']
+        self.url = 'https://www.zomato.com/php/social_load_more.php'
+        return self.parse_restaurants()
+
+    def parse_zone(self):
+        headers = {'user-agent': random.SystemRandom().choice(self.userAgents)}
+        yield Request(
+            url=self.url,
+            callback=self.parse_zone_response, headers=headers
+        )
+
+    def parse_zone_response(self,response):
+        soup = BeautifulSoup(response.text,"lxml")
+        all_divs = soup.find_all('div',{'class':'subzone_res_card'})
+        self.entity_id = all_divs[0]['data-entity-id']
+        self.url = 'https://www.zomato.com/php/social_load_more.php'
+        return self.parse_restaurants()
 
     def parse_city(self):
         headers = {'user-agent': random.SystemRandom().choice(self.userAgents)}
