@@ -1,10 +1,10 @@
-from flask import Flask,jsonify,request,render_template
+from flask import Flask,request,render_template
 from allReviews import AllreviewsSpider
 import json
 from scrapy.crawler import CrawlerRunner
 import time
 
-app = Flask('Scrape With Flask')
+app = Flask(__name__)
 crawl_runner = CrawlerRunner()      # requires the Twisted reactor to run
 
 reviews_list = []                    # store quotes
