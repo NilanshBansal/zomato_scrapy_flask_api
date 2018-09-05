@@ -21,7 +21,7 @@ def crawl():
     eventual = crawl_runner.crawl(AllreviewsSpider , query=query, reviews_list=reviews_list)
     eventual.addCallback(finished_scrape)
     
-    time.sleep(10)
+    time.sleep(30)
     if scrape_complete:
         return json.dumps(reviews_list)
     return 'ERORR OCCURRED'
